@@ -8,19 +8,27 @@ public class Lexer {
     String regN = "[0-9]";
     String regL = "[a-zA-Z]";
     String regLN="[a-zA-Z0-9]";
+
+    String sourceText=" ";
+    int curIndex = 0;
+
     public static int line = 1;
     char peek = ' ';
     Hashtable words = new Hashtable();
+    Hashtable values = new Hashtable();
     void reserve(Word w)
     {
         words.put(w.lexeme,w);
     }
-    public Lexer(){
+    public Lexer(String SF, int cIndex){
+        sourceText = SF;
+        curIndex = cIndex;
         reserve(new Word("if",Tag.IF));
         reserve(new Word("else",Tag.ELSE));
         reserve(new Word("while",Tag.WHILE));
         reserve(new Word("do",Tag.DO));
         reserve(new Word("break",Tag.BREAK));
+        reserve(new Word("for",Tag.FOR));
        reserve(Word.True);
         reserve(Word.False);
         reserve(Type.Int);
@@ -28,19 +36,30 @@ public class Lexer {
         reserve(Type.Bool);
         reserve(Type.Float);
     }
-    void getChar() throws IOException
+    void getChar()
     {
-        peek = (char)System.in.read();
+        peek = sourceText.charAt(curIndex);
+        curIndex++;
     }
-    boolean readch(char c)throws IOException{
+    boolean readch(char c){
         getChar();
         if(peek!=c)
             return false;
         peek=' ';
         return true;
     }
+    public void TokenPrint(){
+        System.out.println("词法输r出");
+        System.out.println(words);
+        System.out.println(values);
 
-    public Token scan() throws IOException{
+    }
+   public void renewLex(){
+        line=1;
+       words = new Hashtable();
+       values = new Hashtable();
+   }
+    public Token scan() {
         for(;;getChar()){
             if(peek==' '||peek=='\t')continue;   //遇到空格或者制表符就跳过
             else if(peek=='\n')line++;           //遇到换行符则将当前行数+1
@@ -49,6 +68,7 @@ public class Lexer {
         //switch 确认当前读入的是否包含 >=,<=,!=,||,&&,==等长度为2的运算符
         switch (peek)
         {
+
             case '&':
                 if(readch('&')) return Word.and;
                 else return new Token('&');
@@ -99,6 +119,7 @@ public class Lexer {
                 x+=(peek-'0')/d;
                 d*=10;
             }
+
             return new Real(x);
         }
         //如果读取到字母开头的，进入标识符与关键字识别模块
@@ -117,6 +138,8 @@ public class Lexer {
             if(w!=null) return w;
             w=new Word(str1,Tag.ID);
             words.put(str1,w);
+            values.put(str1,w);
+            System.out.println("词法:"+w.lexeme);
             return w;
         }
         Token tok = new Token(peek);

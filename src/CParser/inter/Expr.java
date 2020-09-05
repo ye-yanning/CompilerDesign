@@ -2,6 +2,7 @@ package CParser.inter;
 import CParser.lexer.*;
 import CParser.symbols.*;
 public class Expr extends Node{
+    public static boolean Error;
     public Token op;
     public Type type;
     Expr(Token tok,Type p){
@@ -15,16 +16,34 @@ public class Expr extends Node{
         return this;
     }
     public void jumping(int t,int f){
+
         emitjumps(transforToString(),t,f);
     }
     public void emitjumps(String test, int t, int f){
-        if(t!=0 && f!=0){
+        //int curSave = quadNum;
+        //int curNext = quadNum+1;
 
-            emit("if "+test+" goto L"+t);
+
+        if(t!=0 && f!=0){
+            emit("ifA "+test+" goto L"+t);
             emit("goto L"+f);
+            quadNum+=2;
+
+
         }
-        else if(t!=0) emit("if "+test+" goto L"+t);
-        else if(f!=0) emit("iffalse "+test+" goto L"+f);
+        else if(t!=0) {
+
+            emit("ifB " + test + " goto L" + t);
+            quadNum+=2;
+
+        }
+        else if(f!=0) {
+            //System.out.println("op.transforToString():"+op.transforToString());
+
+            emit("iffalse "+test+" goto L"+f);
+            quadNum+=2;
+
+        }
     }
     public String transforToString()
     {

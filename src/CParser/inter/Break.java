@@ -8,10 +8,26 @@ public class Break extends  Stmt{
         stmt=Stmt.Enclosing;
     }
     public void gen(int b,int a){
-        quadruple[quadNum][0]="j";
-        quadruple[quadNum][1]="-";
-        quadruple[quadNum][2]="-";
-        quadruple[quadNum][3]=Integer.toString(stmt.after);
+        if(Error)
+            return;
+        if(quad[quadNum]==null)
+            quad[quadNum] = new quadruple();
+
+        falselist = makelist(quadNum);
+        trueList = makelist(quadNum+1);
+        System.out.println("break表输出");
+        ListPrint(nextlist);
+        ListPrint(trueList);
+        ListPrint(falselist);
+        quad[quadNum].op="j";
+        quad[quadNum].arg1="-";
+        stmt.nextlist.add(quadNum);
+        quad[quadNum++].arg2="-";
+        //quad[quadNum++].result=Integer.toString(66666666);
+
         emit("goto L"+stmt.after);
+        System.out.println("BREAKquan:"+quadNum);
+
+
     }
 }

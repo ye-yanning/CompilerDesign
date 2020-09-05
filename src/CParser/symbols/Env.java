@@ -23,4 +23,9 @@ public class Env {
         }
         return null;
     }
+    public void tablePrint(){
+        for(Env e = this;e!=null;e=e.prev){
+            System.out.println(e.table+" "+e.prev);
+        }
+    }
 }

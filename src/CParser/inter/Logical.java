@@ -7,16 +7,21 @@ public class Logical extends Expr{
         super(tok,null);
         expr1 = x1;
         expr2 = x2;
+        if(Error)
+            return;
         type = check(expr1.type,expr2.type);
         if(type==null)
             error("type error");
     }
     public Type check(Type p1,Type p2){
+        if(Error)
+            return null;
         if(p1 == Type.Bool && p2==Type.Bool)
             return Type.Bool;
         else return null;
     }
     public Expr gen(){
+
         int f = newlabels();
         int a = newlabels();
         Temp temp = new Temp(type);
@@ -29,6 +34,7 @@ public class Logical extends Expr{
         return temp;
     }
     public String transforToString(){
+
         return expr1.transforToString()+" "+op.transforToString()+" "+expr2.transforToString();
     }
 }

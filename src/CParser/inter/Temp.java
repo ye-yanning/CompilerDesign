@@ -10,6 +10,13 @@ public class Temp extends Expr{
     }
     public String transforToString()
     {
-        return  "t"+number;
+        String OpResult = "t"+number;
+        //System.out.println("quadNum:"+quadNum+" OpResult:"+OpResult);
+        //if(quad[quadNum]==null)
+         //   quad[quadNum]=new quadruple();
+       // System.out.println("quad[quadNum].op:"+quad[quadNum].op+" "+OpResult);
+       // if(quad[quadNum].op==null)      //假如运算符为空，则将当前临时符号作为四元式的结果
+        //quad[quadNum].result=OpResult;
+        return  OpResult;
     }
 }

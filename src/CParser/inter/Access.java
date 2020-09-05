@@ -13,9 +13,11 @@ public class Access extends Op{
         return new Access(array,index.reduce(),type);
     }
     public void jumping(int t,int f){
+
         emitjumps(reduce().transforToString(),t,f);
     }
     public String transforToString(){
+
         return array.transforToString() +"["+index.transforToString()+"]";
     }
 }

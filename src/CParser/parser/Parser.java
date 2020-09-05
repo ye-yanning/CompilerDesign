@@ -11,37 +11,65 @@ import java.io.IOException;
 public class Parser {
     private Lexer lex;
     private Token look;
+    private boolean whetherFor = false;
     Env top = null;
     int used = 0;
-    public Parser(Lexer l)throws IOException
+    public static StringBuffer isError = new StringBuffer("");
+    public static boolean ErrorSign = false;
+    public Parser(Lexer l)
     {
         lex = l;
         move();
     }
-    void move() throws IOException{
-
+    void move() {
+        if(look!=null)
+        System.out.println("current:"+look.transforToString());
         look = lex.scan();
-        System.out.println("Current look:"+look.transforToString());
     }
     void error(String s){
+        System.out.println("isError:"+isError);
+        System.out.println("出错sacasc");
+        System.out.println("isError:"+isError);
+        ErrorSign = true;
+        Stmt.Error = true;
+        Expr.Error = true;
+       // lex.toTheEnd();
+        isError.append("near line"+lex.line+":"+s+"\n");
+
         throw new Error("near line"+lex.line+":"+s);
+
+
+        //isError.append("near line"+lex.line+":"+s);
     }
-    void match(int t)throws IOException{
+    void match(int t){
         if(look.tag==t)
             move();
-        else error("syntax error");
+        else {
+            error("syntax error");
+        }
     }
-
-    public void program() throws  IOException{
+    public String ConsolePrint(){
+        if(ErrorSign==true)
+            return isError.toString();
+        else return "编译成功";
+    }
+    public void recover(){
+        ErrorSign = false;
+        isError = new StringBuffer("");
+    }
+    public void program() {
         Stmt s = block();
+        System.out.println("s"+s);
         int begin = s.newlabels();
         int after = s.newlabels();
         s.emitlabels(begin);
+
         s.gen(begin,after);
         s.emitlabels(after);
     }
 
-    Stmt block() throws  IOException{
+    Stmt block() {
+        //System.out.println("调用block");
         match('{');
         Env savedEnv = top;
         top=new Env(top);
@@ -49,9 +77,10 @@ public class Parser {
         Stmt s = stmts();
         match('}');
         top=savedEnv;
+        System.out.println("ss:"+s);
         return s;
     }
-    void decls() throws IOException{
+    void decls(){
         while(look.tag == Tag.BASIC){
             Type p = type();
             Token tok = look;
@@ -62,14 +91,14 @@ public class Parser {
             used = used+p.width;
         }
     }
-    Type type() throws IOException{
+    Type type() {
        Type p = (Type)look;
        match(Tag.BASIC);
        if(look.tag !='[')
            return p;
        else return dims(p);
     }
-    Type dims(Type p) throws IOException{
+    Type dims(Type p) {
         match('[');
         Token tok = look;
         match(Tag.NUM);
@@ -79,12 +108,16 @@ public class Parser {
         return new Array(((Num)tok).value,p);
     }
 
-    Stmt stmts() throws IOException{
+    Stmt stmts() {
+        //System.out.println("look.tag:"+look.transforToString());
         if(look.tag=='}')
             return Stmt.Null;
+        if(ErrorSign)
+            return null;
         else return new Seq(stmt(),stmts());
     }
-    Stmt stmt() throws IOException{
+
+    Stmt stmt() {
         Expr x;
         Stmt s,s1,s2;
         Stmt saveStmt;
@@ -136,23 +169,45 @@ public class Parser {
                 match(Tag.BREAK);
                 match(';');
                 return new Break();
+            case Tag.FOR:
+                whetherFor = true;
+                For fornode = new For();
+                saveStmt = Stmt.Enclosing;
+                Stmt.Enclosing = fornode;
+                match(Tag.FOR);
+                match('(');
+                s=stmt();
+                match(';');
+                x=bool();
+                match(';');
+                s1=stmt();
+                match(')');
+                s2=stmt();
+                fornode.init(x,s,s1,s2);
+                Stmt.Enclosing = saveStmt;
+                whetherFor = false;
+                return fornode;
             case '{':
                 return block();
                 default:
                     return assign();
         }
     }
-    Stmt assign() throws IOException{
+    Stmt assign() {
+       // System.out.println("按需分配");
         Stmt stmt;
         Token t = look;
-        System.out.println(look.transforToString());
+        //System.out.println(look.transforToString());
         match(Tag.ID);
         Id id = top.get(t);
-        if(id==null)
+        if(id==null){
             error(t.transforToString()+" undeclared");
+            return null;
+        }
+
         if(look.tag=='='){
             move();
-            System.out.println("=:"+look.transforToString());
+            //System.out.println("=:"+look.transforToString());
             stmt = new Set(id,bool());
         }
         else{
@@ -160,10 +215,11 @@ public class Parser {
             match('=');
             stmt=new SetElem(x,bool());
         }
+        if(!whetherFor)
         match(';');
         return stmt;
     }
-    Expr bool() throws IOException{
+    Expr bool() {
         Expr x = join();
         while(look.tag==Tag.OR){
             Token tok = look;
@@ -172,7 +228,7 @@ public class Parser {
         }
         return x;
     }
-    Expr join() throws IOException{
+    Expr join() {
         Expr x = equality();
         while(look.tag==Tag.AND){
             Token tok = look;
@@ -182,7 +238,7 @@ public class Parser {
         return x;
     }
 
-    Expr equality() throws IOException{
+    Expr equality() {
         Expr x = rel();
         while(look.tag==Tag.EQUAL || look.tag ==Tag.NE){
             Token tok = look;
@@ -191,7 +247,7 @@ public class Parser {
         }
         return x;
     }
-    Expr rel() throws  IOException{
+    Expr rel() {
         Expr x = expr();
         switch (look.tag){
             case '<':
@@ -205,7 +261,7 @@ public class Parser {
                     return x;
         }
     }
-    Expr expr() throws IOException{
+    Expr expr() {
         Expr x = term();
         while(look.tag=='+'||look.tag=='-'){
             Token tok = look;
@@ -215,7 +271,7 @@ public class Parser {
         return x;
     }
 
-    Expr term() throws IOException{
+    Expr term(){
         Expr x =unary();
         while(look.tag=='*'||look.tag=='/'){
             Token tok = look;
@@ -224,7 +280,7 @@ public class Parser {
         }
         return x;
     }
-    Expr unary()throws IOException{
+    Expr unary(){
         if(look.tag =='-'){
             move();
             return new Unary(Word.minus,unary());
@@ -237,7 +293,7 @@ public class Parser {
         else return factor();
     }
 
-    Expr factor() throws IOException{
+    Expr factor() {
         Expr x = null;
         switch (look.tag){
             case '(':
@@ -251,6 +307,8 @@ public class Parser {
                 return x;
             case Tag.REAL:
                 x= new Constant(look,Type.Float);
+                move();
+                return x;
             case Tag.TRUE:
                 x=Constant.True;
                 move();
@@ -266,14 +324,17 @@ public class Parser {
                 String s = look.transforToString();
                 Id id = top.get(look);
                 if(id==null)
+                {
                     error(look.transforToString()+" undeclared");
+                    return null;
+                }
                 move();
                 if(look.tag!='[')
                     return id;
                 else return offset(id);
         }
     }
-    Access offset(Id a) throws IOException{
+    Access offset(Id a) {
         Expr i;
         Expr w;
         Expr t1,t2;
@@ -282,6 +343,8 @@ public class Parser {
         match('[');
         i = bool();
         match(']');
+        if(Stmt.Error)
+            return null;
         type = ((Array)type).of;
         w = new Constant(type.width);
         t1 = new Arith(new Token('*'),i,w);
