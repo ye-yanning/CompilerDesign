@@ -3,6 +3,8 @@
 基于龙书附录代码，在此基础上进行添油加醋
 
 - 增添四元式，三元式产生
+  
+目前而言实现的C语言是if,if-else,if-else if-else,do-while,while,for语句，数组的简单操作，普通语句的表示，以及break语句  
 
 
 ### 进度
